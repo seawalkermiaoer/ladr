@@ -197,13 +197,19 @@ def show_exam_paper_detail(paper_id: int):
 # 主页面
 st.title("📄 试卷管理")
 
+# 检查用户是否已登录
+if not st.session_state.get("logged_in", False):
+    st.error("❌ 请先登录才能访问试卷管理功能")
+    st.info("💡 请返回首页进行登录")
+    st.stop()
+
 # 初始化会话状态
 if 'exam_paper_view_mode' not in st.session_state:
     st.session_state.exam_paper_view_mode = 'list'  # 'list' 或 'detail'
 if 'selected_exam_paper_id' not in st.session_state:
     st.session_state.selected_exam_paper_id = None
 
-# 显示当前选中的学生信息
+# 显示当前选中的学生信息（仅在登录后）
 if is_student_selected():
     st.info(f"📌 当前显示学生: **{get_selected_student_name()}** 的试卷")
 else:
@@ -236,18 +242,38 @@ else:
         
         # 试卷列表
         if exam_papers:
-            # 创建包含学生姓名的试卷数据
+            # 获取所有题目数据用于计算错误率
+            all_questions = get_questions()
+            
+            # 创建包含学生姓名和错误率的试卷数据
             papers_with_student = []
             for paper in exam_papers:
                 student = next((s for s in students if s['id'] == paper['student_id']), None)
                 paper_info = paper.copy()
                 paper_info['student_name'] = student['name'] if student else '未知学生'
+                
+                # 计算错误率
+                paper_questions = [q for q in all_questions if q['exam_paper_id'] == paper['id']]
+                if paper_questions:
+                    wrong_questions = [q for q in paper_questions if not q.get('is_correct', True)]
+                    error_rate = len(wrong_questions) / len(paper_questions) * 100
+                    paper_info['error_rate'] = f"{error_rate:.1f}%"
+                    paper_info['total_questions'] = len(paper_questions)
+                    paper_info['wrong_questions'] = len(wrong_questions)
+                else:
+                    paper_info['error_rate'] = "0.0%"
+                    paper_info['total_questions'] = 0
+                    paper_info['wrong_questions'] = 0
+                
                 papers_with_student.append(paper_info)
             
+            # 按创建时间倒序排列
+            papers_with_student.sort(key=lambda x: x.get('created_time', ''), reverse=True)
+            
             papers_df = pd.DataFrame(papers_with_student)
-            # 重新排列列的顺序
+            # 重新排列列的顺序，添加错误率相关列
             if not papers_df.empty:
-                columns_order = ['id', 'title', 'description', 'student_name', 'student_id', 'created_time']
+                columns_order = ['id', 'title', 'error_rate', 'total_questions', 'wrong_questions', 'student_name', 'created_time', 'description', 'student_id']
                 available_columns = [col for col in columns_order if col in papers_df.columns]
                 papers_df = papers_df[available_columns]
             
@@ -361,9 +387,32 @@ else:
                     
                     if st.button("删除试卷", type="secondary"):
                         paper_id = int(paper_to_delete.split(" - ")[0])
+                        
+                        # 获取相关数据
+                        all_images = get_exam_paper_images()
+                        all_questions = get_questions()
+                        all_question_kps = get_question_knowledge_points()
+                        
+                        # 先删除题目的知识点关联
+                        paper_questions = [q for q in all_questions if q['exam_paper_id'] == paper_id]
+                        for question in paper_questions:
+                            question_kps = [qkp for qkp in all_question_kps if qkp['question_id'] == question['id']]
+                            for qkp in question_kps:
+                                make_api_request("DELETE", f"question_knowledge_points/{qkp['id']}")
+                        
+                        # 删除题目
+                        for question in paper_questions:
+                            make_api_request("DELETE", f"questions/{question['id']}")
+                        
+                        # 删除试卷图片
+                        paper_images = [img for img in all_images if img['exam_paper_id'] == paper_id]
+                        for image in paper_images:
+                            make_api_request("DELETE", f"exam_paper_images/{image['id']}")
+                        
+                        # 最后删除试卷
                         result = make_api_request("DELETE", f"exam_papers/{paper_id}")
                         if result["success"]:
-                            st.success("试卷删除成功！")
+                            st.success("试卷及相关数据删除成功！")
                             st.cache_data.clear()
                             st.rerun()
                         else:

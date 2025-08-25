@@ -23,6 +23,13 @@ def get_students() -> List[Dict]:
 def show_student_selection():
     """显示学生选择页面"""
     st.title("🎓 选择学生")
+    
+    # 检查用户是否已登录
+    if not st.session_state.get("logged_in", False):
+        st.error("❌ 请先登录才能访问学生选择功能")
+        st.info("💡 请返回首页进行登录")
+        st.stop()
+    
     st.markdown("请选择要管理的学生，选择后其他页面将默认筛选该学生的相关内容。")
     
     # 获取学生列表
@@ -113,4 +120,7 @@ def get_selected_student_name() -> str:
 
 # 主页面逻辑
 if __name__ == "__main__":
+    show_student_selection()
+else:
+    # 当作为模块导入时，也需要在页面运行时进行登录检查
     show_student_selection()

@@ -124,7 +124,13 @@ def calculate_trend_analysis(student_id: int, start_date: str, end_date: str,
 def main():
     st.title("📊 错题分析")
     
-    # 显示当前筛选的学生信息
+    # 检查用户是否已登录
+    if not st.session_state.get("logged_in", False):
+        st.error("❌ 请先登录才能访问错题分析功能")
+        st.info("💡 请返回首页进行登录")
+        st.stop()
+    
+    # 显示当前筛选的学生信息（仅在登录后）
     if is_student_selected():
         selected_student = get_selected_student()
         st.info(f"🎯 当前筛选学生: **{selected_student['name']}** (ID: {selected_student['id']})")

@@ -139,8 +139,9 @@ def knowledge_point_management():
 def main():
     """主函数"""
     # 检查用户是否已登录
-    if 'user_id' not in st.session_state:
-        st.error("请先登录")
+    if not st.session_state.get("logged_in", False):
+        st.error("❌ 请先登录才能访问知识点管理功能")
+        st.info("💡 请返回首页进行登录")
         st.stop()
     
     knowledge_point_management()
