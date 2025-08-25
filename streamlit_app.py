@@ -83,7 +83,11 @@ else:
         title="试卷管理", 
         icon="📄"
     )
-
+    exam_paper_images_page = st.Page(
+        "pages/exam_paper_images.py", 
+        title="试卷图片管理", 
+        icon="🖼️"
+    )
     error_analysis_page = st.Page(
         "pages/error_analysis.py", 
         title="错题分析", 
@@ -94,10 +98,12 @@ else:
         title="知识点管理", 
         icon="📚"
     )
+    
     # 创建导航
     pg = st.navigation([
         student_selection_page,
         exam_papers_page,
+        exam_paper_images_page,
         error_analysis_page,
         knowledge_points_page
     ])
