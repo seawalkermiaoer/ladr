@@ -1,20 +1,19 @@
-import os
+import streamlit as st
 from supabase import create_client, Client
-from dotenv import load_dotenv
-
-# 加载 .env 文件中的环境变量 (可选, 便于本地开发)
-# 你需要创建一个 .env 文件，并包含 SUPABASE_URL 和 SUPABASE_KEY
-load_dotenv()
 
 class SupabaseHandler:
     def __init__(self):
         """
         初始化 Supabase 客户端。
         """
-        url: str = os.getenv("SUPABASE_URL")
-        key: str = os.getenv("SUPABASE_KEY")
+        try:
+            url: str = st.secrets["supabase"]["url"]
+            key: str = st.secrets["supabase"]["key"]
+        except KeyError as e:
+            raise ValueError(f"Supabase 配置缺失: {e}。请检查 .streamlit/secrets.toml 文件配置。")
+        
         if not url or not key:
-            raise ValueError("Supabase URL 和 Key 必须在环境变量中设置。请检查 .env 文件配置。")
+            raise ValueError("Supabase URL 和 Key 不能为空。请检查 .streamlit/secrets.toml 文件配置。")
         self.client: Client = create_client(url, key)
 
     def select_data(self, table_name: str, columns: str = "*", filters: dict = None):

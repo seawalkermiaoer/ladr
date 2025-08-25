@@ -5,7 +5,6 @@ import os
 from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
-from dotenv import load_dotenv
 import sys
 
 # 添加父目录到路径以导入api_service
@@ -19,8 +18,6 @@ except ImportError:
     # 如果在pages目录内运行，直接导入
     from student_selection import get_selected_student, is_student_selected, get_selected_student_id, get_selected_student_name
 
-# 加载环境变量
-load_dotenv()
 
 # 获取数据的辅助函数
 @st.cache_data(ttl=30)

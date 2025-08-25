@@ -8,7 +8,6 @@ API服务模块
 import os
 from typing import List, Dict, Any, Optional
 from fastapi import HTTPException
-from dotenv import load_dotenv
 
 # 导入本地模块
 from models import (
@@ -22,9 +21,6 @@ from models import (
     BatchQuestionCreate
 )
 from supabase_handler import SupabaseHandler
-
-# 加载环境变量
-load_dotenv()
 
 # 初始化数据库处理器
 db_handler = SupabaseHandler()

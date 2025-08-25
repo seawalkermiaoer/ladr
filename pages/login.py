@@ -8,7 +8,7 @@ from api_service import api_service
 
 def show_login_page():
     """显示登录页面"""
-    st.title("🔐 学生试卷管理系统")
+    st.title("🔐 错误和重复的密度才是阶梯")
     st.markdown("---")
     
     # 创建居中的登录表单
@@ -55,8 +55,8 @@ def show_login_page():
         
         # 添加一些说明信息
         st.markdown("---")
-        st.info("💡 这是一个学生试卷管理系统，用于管理试卷、题目和知识点。")
-        st.info("🔑 请使用数据库中的用户凭据登录。")
+        st.info("💡 错误是触发神经可塑性的唯一钥匙；没有错误，大脑就默认“一切正常”，不会升级回路。")
+        st.info("🔑 10 分钟高能错误练习 > 2 小时无脑重复")
 
 def check_login():
     """检查登录状态"""

@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from typing import List, Dict, Any
 import os
-from dotenv import load_dotenv
 import sys
 
 # 添加父目录到路径以导入api_service
@@ -15,9 +14,6 @@ try:
 except ImportError:
     # 如果在pages目录内运行，直接导入
     from student_selection import get_selected_student, is_student_selected, get_selected_student_id, get_selected_student_name
-
-# 加载环境变量
-load_dotenv()
 
 # 获取数据的辅助函数
 @st.cache_data(ttl=30)
@@ -194,103 +190,9 @@ def show_exam_paper_detail(paper_id: int):
                             else:
                                 st.error(f"删除失败: {result['error']}")
         
-        st.markdown("---")
-        
-        # 添加新题目
-        st.subheader("➕ 添加新题目")
-        with st.form("add_new_question"):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                new_content = st.text_area("题目内容")
-                new_is_correct = st.selectbox("是否正确", options=[True, False])
-            
-            with col2:
-                new_note = st.text_area("备注")
-                
-                # 知识点选择
-                if all_knowledge_points:
-                    kp_options = [f"{kp['id']} - {kp['name']}" for kp in all_knowledge_points]
-                    new_selected_kps = st.multiselect("关联知识点", options=kp_options)
-            
-            if st.form_submit_button("添加题目", type="primary"):
-                if new_content:
-                    # 添加题目
-                    result = make_api_request("POST", "questions", {
-                        "content": new_content,
-                        "is_correct": new_is_correct,
-                        "note": new_note,
-                        "exam_paper_id": paper_id
-                    })
-                    
-                    if result["success"]:
-                        question_id = result["data"]["id"]
-                        
-                        # 添加知识点关联
-                        if all_knowledge_points and new_selected_kps:
-                            for kp_option in new_selected_kps:
-                                kp_id = int(kp_option.split(" - ")[0])
-                                make_api_request("POST", "question_knowledge_points", {
-                                    "question_id": question_id,
-                                    "knowledge_point_id": kp_id
-                                })
-                        
-                        st.success("题目添加成功！")
-                        st.cache_data.clear()
-                        st.rerun()
-                    else:
-                        st.error(f"添加失败: {result['error']}")
-                else:
-                    st.warning("请填写题目内容")
+
     else:
         st.info("该试卷暂无题目")
-        
-        # 添加第一个题目
-        st.subheader("➕ 添加第一个题目")
-        with st.form("add_first_question"):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                first_content = st.text_area("题目内容")
-                first_is_correct = st.selectbox("是否正确", options=[True, False])
-            
-            with col2:
-                first_note = st.text_area("备注")
-                
-                # 知识点选择
-                if all_knowledge_points:
-                    kp_options = [f"{kp['id']} - {kp['name']}" for kp in all_knowledge_points]
-                    first_selected_kps = st.multiselect("关联知识点", options=kp_options)
-            
-            if st.form_submit_button("添加题目", type="primary"):
-                if first_content:
-                    # 添加题目
-                    result = make_api_request("POST", "questions", {
-                        "content": first_content,
-                        "is_correct": first_is_correct,
-                        "note": first_note,
-                        "exam_paper_id": paper_id
-                    })
-                    
-                    if result["success"]:
-                        question_id = result["data"]["id"]
-                        
-                        # 添加知识点关联
-                        if all_knowledge_points and first_selected_kps:
-                            for kp_option in first_selected_kps:
-                                kp_id = int(kp_option.split(" - ")[0])
-                                make_api_request("POST", "question_knowledge_points", {
-                                    "question_id": question_id,
-                                    "knowledge_point_id": kp_id
-                                })
-                        
-                        st.success("题目添加成功！")
-                        st.cache_data.clear()
-                        st.rerun()
-                    else:
-                        st.error(f"添加失败: {result['error']}")
-                else:
-                    st.warning("请填写题目内容")
 
 # 主页面
 st.title("📄 试卷管理")

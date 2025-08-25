@@ -32,6 +32,17 @@ def show_student_selection():
         st.warning("暂无学生数据，请先添加学生信息。")
         return
     
+    # 如果没有选中学生且有学生数据，自动选择第一个学生
+    if not is_student_selected() and students:
+        first_student = students[0]
+        st.session_state.selected_student = {
+            'id': first_student.get('id'),
+            'name': first_student.get('name', '未知学生'),
+            'user_id': first_student.get('user_id')
+        }
+        st.success(f"已自动选择学生: {first_student.get('name', '未知学生')}")
+        st.rerun()
+    
     # 创建学生选择界面
     st.markdown("### 学生列表")
     

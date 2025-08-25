@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from typing import List, Dict, Any
 import os
-from dotenv import load_dotenv
 import sys
 
 # 添加当前目录到路径以导入模块
@@ -10,30 +9,13 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from api_service import make_api_request
 from pages.login import show_login_page, check_login, show_logout_button
 
-
-
-
-print(f"[DEBUG] 输入密码: {st.secrets.supabase.url}")
-
-
-# 加载环境变量
-load_dotenv()
-
-
-
-# 获取环境变量
-ENV = os.getenv("ENV", "local")
-
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
-STREAMLIT_SERVER_PORT = int(os.getenv("STREAMLIT_SERVER_PORT", "8501"))
-STREAMLIT_SERVER_ADDRESS = os.getenv("STREAMLIT_SERVER_ADDRESS", "localhost")
-OBSIDIAN_KEY = os.getenv("obsidian_key", "")
-OBSIDIAN_HOST = os.getenv("obsidian_host", "http://localhost:27123")
-# SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-# SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
-
-SUPABASE_URL = st.secrets.supabase.url
-SUPABASE_KEY = st.secrets.supabase.key
+# 使用 Streamlit secrets 获取 Supabase 配置
+try:
+    SUPABASE_URL = st.secrets["supabase"]["url"]
+    SUPABASE_KEY = st.secrets["supabase"]["key"]
+except KeyError:
+    SUPABASE_URL = ""
+    SUPABASE_KEY = ""
 
 
 
@@ -72,29 +54,12 @@ def get_knowledge_points() -> List[Dict]:
     return result["data"] if result["success"] else []
 
 
-
-def show_env_info():
-    """显示环境变量信息"""
-    with st.sidebar:
-        with st.expander("🔧 环境配置信息"):
-            st.write(f"**环境**: {ENV}")
-            st.write(f"**API地址**: {API_BASE_URL}")
-            st.write(f"**Streamlit端口**: {STREAMLIT_SERVER_PORT}")
-            st.write(f"**Streamlit地址**: {STREAMLIT_SERVER_ADDRESS}")
-            st.write(f"**Obsidian主机**: {OBSIDIAN_HOST}")
-            st.write(f"**Obsidian密钥**: {'已配置' if OBSIDIAN_KEY else '未配置'}")
-            st.write(f"**Supabase URL**: {'已配置' if SUPABASE_URL else '未配置'}")
-            st.write(f"**Supabase Key**: {'已配置' if SUPABASE_KEY else '未配置'}")
-
 # 主应用逻辑
 if not check_login():
     show_login_page()
 else:
     # 显示登出按钮
     show_logout_button()
-    
-    # 显示环境配置信息（所有环境下都显示）
-    show_env_info()
     
     # 显示当前选中的学生信息
     if 'selected_student' in st.session_state:
@@ -129,19 +94,12 @@ else:
         title="知识点管理", 
         icon="📚"
     )
-    question_knowledge_points_page = st.Page(
-        "pages/question_knowledge_points.py", 
-        title="题目知识点关联", 
-        icon="🔗"
-    )
-    
     # 创建导航
     pg = st.navigation([
         student_selection_page,
         exam_papers_page,
         error_analysis_page,
-        knowledge_points_page,
-        question_knowledge_points_page
+        knowledge_points_page
     ])
     
     # 运行页面
