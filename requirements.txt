@@ -8,3 +8,4 @@ pydantic
 supabase
 python-multipart
 fastapi-cors
+plotly
