@@ -10,6 +10,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from api_service import make_api_request
 from pages.login import show_login_page, check_login, show_logout_button
 
+
+
+
+print(f"[DEBUG] 输入密码: {st.secrets.supabase.url}")
+
+
 # 加载环境变量
 load_dotenv()
 
@@ -23,8 +29,11 @@ STREAMLIT_SERVER_PORT = int(os.getenv("STREAMLIT_SERVER_PORT", "8501"))
 STREAMLIT_SERVER_ADDRESS = os.getenv("STREAMLIT_SERVER_ADDRESS", "localhost")
 OBSIDIAN_KEY = os.getenv("obsidian_key", "")
 OBSIDIAN_HOST = os.getenv("obsidian_host", "http://localhost:27123")
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+# SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+# SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
+SUPABASE_URL = st.secrets.supabase.url
+SUPABASE_KEY = st.secrets.supabase.key
 
 
 
