@@ -149,14 +149,9 @@ def show_exam_paper_detail(paper_id: int):
                         # 从选择的字符串中提取图片ID
                         img_id = int(selected_image.split(' - ')[0])
                         selected_image_id = img_id
-                        # 找到对应的图片记录
-                        img_record = next((img for img in paper_images if img['id'] == img_id), None)
-                        if img_record:
-                            content += f"\n\n![题目图片]({img_record['image_url']})"
                     elif paper_images:
                         # 如果没有选择图片但试卷有图片，使用第一张图片
                         selected_image_id = paper_images[0]['id']
-                        content += f"\n\n![题目图片]({paper_images[0]['image_url']})"
                     
                     # 验证必需的image_id
                     if not selected_image_id:
@@ -282,7 +277,7 @@ def show_exam_paper_detail(paper_id: int):
                                         error_count += 1
                                         continue
                                     
-                                    # 添加题目内容，如果有图片URL则循环使用
+                                    # 获取题目内容和图片ID
                                     content = question_data['content']
                                     selected_image_id = None
                                     
@@ -292,14 +287,9 @@ def show_exam_paper_detail(paper_id: int):
                                         selected_img_option = selected_images[image_index]
                                         # 从选择的字符串中提取图片ID
                                         selected_image_id = int(selected_img_option.split(' - ')[0])
-                                        # 找到对应的图片记录
-                                        img_record = next((img for img in paper_images if img['id'] == selected_image_id), None)
-                                        if img_record:
-                                            content += f"\n\n![题目图片]({img_record['image_url']})"
                                     elif paper_images:
                                         # 如果没有选择图片但试卷有图片，使用第一张图片
                                         selected_image_id = paper_images[0]['id']
-                                        content += f"\n\n![题目图片]({paper_images[0]['image_url']})"
                                     
                                     # 验证必需的image_id
                                     if not selected_image_id:
