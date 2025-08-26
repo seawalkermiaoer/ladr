@@ -99,66 +99,91 @@ if exam_papers:
             
             st.subheader(f"📸 试卷图片列表 (共 {len(images_with_paper)} 张)")
             
-            # 图片网格显示
-            cols_per_row = 3
+            # 图片列表显示（默认不加载图片）
+            cols_per_row = 2
             for i in range(0, len(images_with_paper), cols_per_row):
                 cols = st.columns(cols_per_row)
                 for j in range(cols_per_row):
                     if i + j < len(images_with_paper):
                         image_info = images_with_paper[i + j]
                         with cols[j]:
-                            try:
-                                # 使用COS管理器生成安全的预签名URL
-                                cos_manager = ExamPaperCOSManager()
+                            # 创建图片信息卡片
+                            with st.container():
+                                st.markdown(f"### 📷 图片 #{image_info.get('upload_order', 'N/A')}")
+                                st.caption(f"**ID:** {image_info['id']} | **试卷:** {image_info['paper_title']}")
                                 
-                                # 从完整URL中提取文件名
-                                if 'cos.ap-guangzhou.myqcloud.com' in image_info['image_url']:
-                                    # 提取COS文件路径
-                                    filename = image_info['image_url'].split('.myqcloud.com/')[-1]
-                                    # 生成预签名URL
-                                    safe_url = cos_manager.get_safe_image_url(filename, use_presigned=True, expires_in=7200)
-                                    st.image(safe_url, use_container_width=True)
-                                else:
-                                    # 如果不是COS URL，直接使用原URL
-                                    st.image(image_info['image_url'], use_container_width=True)
+                                # 图片预览按钮
+                                if st.button(f"👁️ 查看图片详情", key=f"view_image_{image_info['id']}", type="primary"):
+                                    # 在session_state中存储要显示的图片ID
+                                    if 'viewing_image_id' not in st.session_state:
+                                        st.session_state.viewing_image_id = set()
+                                    
+                                    if image_info['id'] in st.session_state.viewing_image_id:
+                                        st.session_state.viewing_image_id.remove(image_info['id'])
+                                    else:
+                                        st.session_state.viewing_image_id.add(image_info['id'])
+                                    st.rerun()
                                 
-                                # 显示图片信息
-                                st.caption(f"**顺序:** {image_info.get('upload_order', 'N/A')} | **ID:** {image_info['id']}")
+                                # 如果图片被选中显示，则加载图片
+                                if ('viewing_image_id' in st.session_state and 
+                                    image_info['id'] in st.session_state.viewing_image_id):
+                                    
+                                    try:
+                                        # 使用COS管理器生成安全的预签名URL
+                                        cos_manager = ExamPaperCOSManager()
+                                        
+                                        # 从完整URL中提取文件名
+                                        if 'cos.ap-guangzhou.myqcloud.com' in image_info['image_url']:
+                                            # 提取COS文件路径
+                                            filename = image_info['image_url'].split('.myqcloud.com/')[-1]
+                                            # 生成预签名URL
+                                            safe_url = cos_manager.get_safe_image_url(filename, use_presigned=True, expires_in=7200)
+                                            st.image(safe_url, use_container_width=True)
+                                        else:
+                                            # 如果不是COS URL，直接使用原URL
+                                            st.image(image_info['image_url'], use_container_width=True)
+                                        
+                                        # 隐藏图片按钮
+                                        if st.button(f"🙈 隐藏图片", key=f"hide_image_{image_info['id']}", type="secondary"):
+                                            st.session_state.viewing_image_id.remove(image_info['id'])
+                                            st.rerun()
+                                    
+                                    except Exception as e:
+                                        # 显示错误信息
+                                        st.error(f"❌ 图片加载失败: {str(e)}")
+                                        st.info("🔗 图片链接可能已失效或无法访问")
+                                        
+                                        # 显示完整URL以便调试
+                                        with st.expander("🔍 查看详细信息"):
+                                            st.text("完整URL:")
+                                            st.code(image_info['image_url'], language=None)
+                                            st.text("错误详情:")
+                                            st.code(str(e), language=None)
+                                            
+                                            # 提供删除选项
+                                            if st.button(f"🗑️ 删除此图片记录", key=f"delete_{image_info['id']}", type="secondary"):
+                                                try:
+                                                    delete_result = make_api_request("DELETE", f"exam_paper_images/{image_info['id']}")
+                                                    if delete_result["success"]:
+                                                        st.success("✅ 图片记录已删除")
+                                                        # 从viewing_image_id中移除
+                                                        if image_info['id'] in st.session_state.viewing_image_id:
+                                                            st.session_state.viewing_image_id.remove(image_info['id'])
+                                                        st.cache_data.clear()
+                                                        st.rerun()
+                                                    else:
+                                                        st.error(f"删除失败: {delete_result['error']}")
+                                                except Exception as del_e:
+                                                    st.error(f"删除操作失败: {str(del_e)}")
                                 
-                                # 访问链接
+                                # 访问链接（始终显示）
                                 with st.expander("🔗 访问链接"):
                                     st.code(image_info['image_url'], language=None)
                                     if st.button(f"📋 复制链接", key=f"copy_{image_info['id']}"):
                                         st.success("链接已复制到剪贴板！")
                                         st.code(f"navigator.clipboard.writeText('{image_info['image_url']}')", language="javascript")
-                            
-                            except Exception as e:
-                                # 显示错误信息和占位图片
-                                st.error(f"❌ 图片加载失败: {str(e)}")
-                                st.info("🔗 图片链接可能已失效或无法访问")
                                 
-                                # 显示完整URL以便调试
-                                with st.expander("🔍 查看详细信息"):
-                                    st.text("完整URL:")
-                                    st.code(image_info['image_url'], language=None)
-                                    st.text("错误详情:")
-                                    st.code(str(e), language=None)
-                                    
-                                    # 提供删除选项
-                                    if st.button(f"🗑️ 删除此图片记录", key=f"delete_{image_info['id']}", type="secondary"):
-                                        try:
-                                            delete_result = make_api_request("DELETE", f"exam_paper_images/{image_info['id']}")
-                                            if delete_result["success"]:
-                                                st.success("✅ 图片记录已删除")
-                                                st.cache_data.clear()
-                                                st.rerun()
-                                            else:
-                                                st.error(f"删除失败: {delete_result['error']}")
-                                        except Exception as del_e:
-                                            st.error(f"删除操作失败: {str(del_e)}")
-                                
-                                # 显示图片信息（即使加载失败）
-                                st.caption(f"**顺序:** {image_info.get('upload_order', 'N/A')} | **ID:** {image_info['id']}")
+                                st.markdown("---")
             
             # 数据表格（可选显示）
             with st.expander("📊 详细数据表格"):

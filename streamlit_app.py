@@ -88,6 +88,11 @@ else:
         title="试卷图片管理", 
         icon="🖼️"
     )
+    exam_paper_detail_page = st.Page(
+        "pages/exam_paper_detail.py", 
+        title="试卷详情", 
+        icon="📋"
+    )
     error_analysis_page = st.Page(
         "pages/error_analysis.py", 
         title="错题分析", 
@@ -104,6 +109,7 @@ else:
         student_selection_page,
         exam_papers_page,
         exam_paper_images_page,
+        exam_paper_detail_page,
         error_analysis_page,
         knowledge_points_page
     ])
